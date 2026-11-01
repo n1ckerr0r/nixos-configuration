@@ -25,36 +25,10 @@ let
       done
     '';
   };
-  telemostIcon = pkgs.fetchurl {
-    name = "yandex-telemost.svg";
-    url = "https://upload.wikimedia.org/wikipedia/commons/f/f9/Yandex_Telemost_icon.svg";
-    hash = "sha256-PiUvfB3kbgiVsGD6mjP0Cz19lzFzOjA1rT2Tpc7raFU=";
-  };
 in
 {
-
-  # Telemost has no Linux desktop release.  This starts its supported web client
-  # in a separate application window and exposes it in the application menu.
   environment.systemPackages = [
     pkgs.google-chrome
     yandexBrowserDirect
-    (pkgs.writeShellApplication {
-      name = "telemost";
-      runtimeInputs = [ yandexBrowserDirect ];
-      text = ''
-        exec yandex-browser-stable --app=https://telemost.yandex.ru "$@"
-      '';
-    })
   ];
-
-  environment.etc."xdg/applications/telemost.desktop".text = ''
-    [Desktop Entry]
-    Type=Application
-    Name=Yandex Telemost
-    Comment=Yandex Telemost web application
-    Exec=telemost
-    Icon=${telemostIcon}
-    Terminal=false
-    Categories=Network;VideoConference;
-  '';
 }
