@@ -3,7 +3,7 @@
 let
   noctaliaShell = pkgs.noctalia-shell.overrideAttrs (oldAttrs: {
     postPatch = (oldAttrs.postPatch or "") + ''
-      patch -p3 < ${../../home/n1ckerr0r/dotfiles/noctalia/patches/floating-glass-popups.patch}
+      patch -p3 < ${./patches/floating-glass-popups.patch}
       substituteInPlace Commons/Style.qml \
         --replace-fail 'h = (Settings.data.bar.position === "left" || Settings.data.bar.position === "right") ? 49 : 47;' 'h = (Settings.data.bar.position === "left" || Settings.data.bar.position === "right") ? 37 : 35;' \
         --replace-fail 'h = isVertical ? 49 : 47;' 'h = isVertical ? 37 : 35;' \

@@ -19,9 +19,9 @@ cd /home/n1ckerr0r/nixos-config
 Evaluate and build before switching the running system:
 
 ```sh
-nix flake check path:.
-nix build 'path:.#nixosConfigurations.laptop.config.system.build.toplevel'
-sudo nixos-rebuild switch --flake 'path:.#laptop'
+nix flake check
+nix build .#nixosConfigurations.laptop.config.system.build.toplevel
+sudo nixos-rebuild switch --flake .#laptop
 ```
 
 Format tracked Nix files with:
@@ -39,6 +39,7 @@ network settings, reusable system modules and the Home Manager profile.
 ```text
 flake.nix
 ├── hosts/laptop/                 host hardware, network and module imports
+├── assets/                       wallpapers required by system and user links
 ├── modules/
 │   ├── apps/                     desktop/CLI apps and external integrations
 │   ├── desktop/                  Niri, Noctalia, GTK, portals and SDDM
@@ -59,10 +60,9 @@ System packages and services stay in Nix modules. Editable application settings
 live in the dotfiles repository and are exposed with Home Manager
 `mkOutOfStoreSymlink`, so editing the live config edits the repository file.
 
-The `path:.` form is intentional. A normal Git-flake source omits submodule
-contents, while this configuration reads a few initialized dotfile assets during
-evaluation. The path-flake includes the complete checked-out tree. Initialize
-all submodules before evaluating or rebuilding.
+The NixOS flake does not read files from Git submodules while evaluating. Assets
+needed by the system live in the main repository; submodules are used only as
+editable runtime sources for Home Manager links.
 
 ## Four repositories
 

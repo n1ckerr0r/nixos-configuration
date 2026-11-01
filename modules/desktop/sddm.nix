@@ -8,7 +8,7 @@ let
       theme_dir=$out/share/sddm/themes/sddm-astronaut-theme
 
       chmod -R u+w "$theme_dir"
-      cp ${../../home/n1ckerr0r/dotfiles/wallpapers/lisau_1.png} \
+      cp ${../../assets/wallpapers/lisau_1.png} \
         "$theme_dir/Backgrounds/lisau_1.png"
 
       substituteInPlace "$theme_dir/metadata.desktop" \

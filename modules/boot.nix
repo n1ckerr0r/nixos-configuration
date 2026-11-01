@@ -7,7 +7,7 @@
     enable = true;
     efiSupport = true;
     device = "nodev";
-    splashImage = ../home/n1ckerr0r/dotfiles/wallpapers/lisau_3.png;
+    splashImage = ../assets/wallpapers/lisau_3.png;
     gfxmodeEfi = "1920x1080";
     configurationLimit = 10;
     useOSProber = false;

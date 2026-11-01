@@ -1,0 +1,511 @@
+diff -ruN /tmp/noctalia-orig/Commons/Color.qml /tmp/noctalia-new/Commons/Color.qml
+--- /tmp/noctalia-orig/Commons/Color.qml	2026-06-13 11:31:58.304000000 +0300
++++ /tmp/noctalia-new/Commons/Color.qml	2026-06-14 00:00:00.000000000 +0300
+@@ -304,6 +304,14 @@
+       return root.mPrimary;
+     case "secondary":
+       return root.mSecondary;
++    case "onPrimary":
++      return root.mOnPrimary;
++    case "onSecondary":
++      return root.mOnSecondary;
++    case "onTertiary":
++      return root.mOnTertiary;
++    case "onError":
++      return root.mOnError;
+     case "tertiary":
+       return root.mTertiary;
+     case "error":
+@@ -336,6 +344,14 @@
+       return root.mPrimary;
+     case "secondary":
+       return root.mSecondary;
++    case "onPrimary":
++      return root.mOnPrimary;
++    case "onSecondary":
++      return root.mOnSecondary;
++    case "onTertiary":
++      return root.mOnTertiary;
++    case "onError":
++      return root.mOnError;
+     case "tertiary":
+       return root.mTertiary;
+     case "error":
+diff -ruN /tmp/noctalia-orig/Modules/MainScreen/Backgrounds/PanelBackground.qml /tmp/noctalia-new/Modules/MainScreen/Backgrounds/PanelBackground.qml
+--- /tmp/noctalia-orig/Modules/MainScreen/Backgrounds/PanelBackground.qml	2026-06-13 11:31:58.317926939 +0300
++++ /tmp/noctalia-new/Modules/MainScreen/Backgrounds/PanelBackground.qml	2026-06-13 11:38:56.670154958 +0300
+@@ -25,11 +25,14 @@
+   // Required reference to AllBackgrounds shapeContainer
+   required property var shapeContainer
+
++  readonly property color tokyoBorderColor: Qt.rgba(0x7a / 255, 0xa2 / 255, 0xf7 / 255, 0.20)
++
+   // Default background color (used if panel doesn't specify one)
+   property color defaultBackgroundColor: Color.mSurface
++  property color defaultBorderColor: tokyoBorderColor
+
+-  // Corner radius (from Style)
+-  readonly property real radius: Style.radiusL
++  // Floating popup radius, independent from bar attachment/corner logic.
++  readonly property real radius: 22
+
+   // Get panel's panelRegion (geometry placeholder)
+   readonly property var panelRegion: assignedPanel?.panelRegion ?? null
+@@ -48,6 +51,12 @@
+     return defaultBackgroundColor;
+   }
+
++  readonly property color effectiveBorderColor: {
++    if (!assignedPanel)
++      return "transparent";
++    return assignedPanel.panelBorderColor !== undefined ? assignedPanel.panelBorderColor : defaultBorderColor;
++  }
++
+   // Panel position - panelBg is in screen coordinates already
+   readonly property real panelX: panelBg ? panelBg.x : 0
+   readonly property real panelY: panelBg ? panelBg.y : 0
+@@ -74,24 +83,25 @@
+   }
+
+   // Per-corner multipliers and radii based on panelBg's corner states
+-  readonly property real tlMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.topLeftCornerState) : 1
+-  readonly property real tlMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.topLeftCornerState) : 1
+-  readonly property real tlRadius: panelBg ? getCornerRadius(panelBg.topLeftCornerState) : 0
+-
+-  readonly property real trMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.topRightCornerState) : 1
+-  readonly property real trMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.topRightCornerState) : 1
+-  readonly property real trRadius: panelBg ? getCornerRadius(panelBg.topRightCornerState) : 0
+-
+-  readonly property real brMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.bottomRightCornerState) : 1
+-  readonly property real brMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.bottomRightCornerState) : 1
+-  readonly property real brRadius: panelBg ? getCornerRadius(panelBg.bottomRightCornerState) : 0
+-
+-  readonly property real blMultX: panelBg ? ShapeCornerHelper.getMultX(panelBg.bottomLeftCornerState) : 1
+-  readonly property real blMultY: panelBg ? ShapeCornerHelper.getMultY(panelBg.bottomLeftCornerState) : 1
+-  readonly property real blRadius: panelBg ? getCornerRadius(panelBg.bottomLeftCornerState) : 0
++  readonly property real tlMultX: 1
++  readonly property real tlMultY: 1
++  readonly property real tlRadius: panelBg ? getCornerRadius(0) : 0
++
++  readonly property real trMultX: 1
++  readonly property real trMultY: 1
++  readonly property real trRadius: panelBg ? getCornerRadius(0) : 0
++
++  readonly property real brMultX: 1
++  readonly property real brMultY: 1
++  readonly property real brRadius: panelBg ? getCornerRadius(0) : 0
++
++  readonly property real blMultX: 1
++  readonly property real blMultY: 1
++  readonly property real blRadius: panelBg ? getCornerRadius(0) : 0
+
+   // ShapePath configuration
+-  strokeWidth: -1 // No stroke, fill only
++  strokeWidth: isRenderable ? Style.borderS : -1
++  strokeColor: isRenderable ? effectiveBorderColor : "transparent"
+
+   // Start point - use tiny off-screen non-degenerate fallback when not renderable.
+   // Fallback forms a 1×1 off-screen square where each edge is split between a PathLine
+diff -ruN /tmp/noctalia-orig/Modules/MainScreen/SmartPanel.qml /tmp/noctalia-new/Modules/MainScreen/SmartPanel.qml
+--- /tmp/noctalia-orig/Modules/MainScreen/SmartPanel.qml	2026-06-13 11:31:58.318504686 +0300
++++ /tmp/noctalia-new/Modules/MainScreen/SmartPanel.qml	2026-06-13 11:39:03.032467826 +0300
+@@ -24,7 +24,7 @@
+   property real preferredWidthRatio
+   property real preferredHeightRatio
+   property color panelBackgroundColor: Color.mSurface
+-  property color panelBorderColor: Color.mOutline
++  property color panelBorderColor: Qt.rgba(0x7a / 255, 0xa2 / 255, 0xf7 / 255, 0.20)
+   property var buttonItem: null
+   property bool forceAttachToBar: false
+
+@@ -105,7 +105,8 @@
+   readonly property bool barFloating: Settings.data.bar.barType === "floating"
+   readonly property real barMarginH: (barFloating && barShouldShow) ? Math.ceil(Settings.data.bar.marginHorizontal) : 0
+   readonly property real barMarginV: (barFloating && barShouldShow) ? Math.ceil(Settings.data.bar.marginVertical) : 0
+-  readonly property real attachmentOverlap: 1 // Panel extends into bar area to fix hairline gap with fractional scaling
++  readonly property real popupGap: 10
++  readonly property real attachmentOverlap: -popupGap
+
+   // Check if bar should be visible on this screen
+   readonly property bool barShouldShow: {
+@@ -1162,138 +1163,11 @@
+       // State 1: Horizontal inversion (outer curve on X-axis)
+       // State 2: Vertical inversion (outer curve on Y-axis)
+
+-      // Smart corner state calculation based on bar attachment and edge touching
+-      property int topLeftCornerState: {
+-        // If bar is not visible, don't show outer corners based on bar attachment
+-        if (!root.barShouldShow) {
+-          // Only check edge touching, not bar touching
+-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingTopEdge);
+-          if (edgeInverted) {
+-            if (panelContent.touchingLeftEdge && panelContent.touchingTopEdge)
+-              return 0; // Both edges: no inversion (normal rounded corner)
+-            if (panelContent.touchingLeftEdge)
+-              return 2; // Left edge: vertical inversion
+-            if (panelContent.touchingTopEdge)
+-              return 1; // Top edge: horizontal inversion
+-          }
+-          return 0;
+-        }
+-
+-        var barTouchInverted = panelContent.touchingTopBar || panelContent.touchingLeftBar;
+-        // Invert if touching either edge that forms this corner (left OR top), regardless of bar position
+-        var edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingTopEdge);
+-
+-        if (barTouchInverted || edgeInverted) {
+-          // Determine inversion direction based on which edge is touched
+-          if (panelContent.touchingLeftEdge && panelContent.touchingTopEdge)
+-            return 0; // Both edges: no inversion (normal rounded corner)
+-          if (panelContent.touchingLeftEdge)
+-            return 2; // Left edge: vertical inversion
+-          if (panelContent.touchingTopEdge)
+-            return 1; // Top edge: horizontal inversion
+-          return root.barIsVertical ? 2 : 1;
+-        }
+-        return 0;
+-      }
+-
+-      property int topRightCornerState: {
+-        // If bar is not visible, don't show outer corners based on bar attachment
+-        if (!root.barShouldShow) {
+-          // Only check edge touching, not bar touching
+-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingTopEdge);
+-          if (edgeInverted) {
+-            if (panelContent.touchingRightEdge && panelContent.touchingTopEdge)
+-              return 0; // Both edges: no inversion (normal rounded corner)
+-            if (panelContent.touchingRightEdge)
+-              return 2; // Right edge: vertical inversion
+-            if (panelContent.touchingTopEdge)
+-              return 1; // Top edge: horizontal inversion
+-          }
+-          return 0;
+-        }
+-
+-        var barTouchInverted = panelContent.touchingTopBar || panelContent.touchingRightBar;
+-        // Invert if touching either edge that forms this corner (right OR top), regardless of bar position
+-        var edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingTopEdge);
+-
+-        if (barTouchInverted || edgeInverted) {
+-          // Determine inversion direction based on which edge is touched
+-          if (panelContent.touchingRightEdge && panelContent.touchingTopEdge)
+-            return 0; // Both edges: no inversion (normal rounded corner)
+-          if (panelContent.touchingRightEdge)
+-            return 2; // Right edge: vertical inversion
+-          if (panelContent.touchingTopEdge)
+-            return 1; // Top edge: horizontal inversion
+-          return root.barIsVertical ? 2 : 1;
+-        }
+-        return 0;
+-      }
+-
+-      property int bottomLeftCornerState: {
+-        // If bar is not visible, don't show outer corners based on bar attachment
+-        if (!root.barShouldShow) {
+-          // Only check edge touching, not bar touching
+-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingBottomEdge);
+-          if (edgeInverted) {
+-            if (panelContent.touchingLeftEdge && panelContent.touchingBottomEdge)
+-              return 0; // Both edges: no inversion (normal rounded corner)
+-            if (panelContent.touchingLeftEdge)
+-              return 2; // Left edge: vertical inversion
+-            if (panelContent.touchingBottomEdge)
+-              return 1; // Bottom edge: horizontal inversion
+-          }
+-          return 0;
+-        }
+-
+-        var barTouchInverted = panelContent.touchingBottomBar || panelContent.touchingLeftBar;
+-        // Invert if touching either edge that forms this corner (left OR bottom), regardless of bar position
+-        var edgeInverted = panelContent.allowAttach && (panelContent.touchingLeftEdge || panelContent.touchingBottomEdge);
+-
+-        if (barTouchInverted || edgeInverted) {
+-          // Determine inversion direction based on which edge is touched
+-          if (panelContent.touchingLeftEdge && panelContent.touchingBottomEdge)
+-            return 0; // Both edges: no inversion (normal rounded corner)
+-          if (panelContent.touchingLeftEdge)
+-            return 2; // Left edge: vertical inversion
+-          if (panelContent.touchingBottomEdge)
+-            return 1; // Bottom edge: horizontal inversion
+-          return root.barIsVertical ? 2 : 1;
+-        }
+-        return 0;
+-      }
+-
+-      property int bottomRightCornerState: {
+-        // If bar is not visible, don't show outer corners based on bar attachment
+-        if (!root.barShouldShow) {
+-          // Only check edge touching, not bar touching
+-          var edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingBottomEdge);
+-          if (edgeInverted) {
+-            if (panelContent.touchingRightEdge && panelContent.touchingBottomEdge)
+-              return 0; // Both edges: no inversion (normal rounded corner)
+-            if (panelContent.touchingRightEdge)
+-              return 2; // Right edge: vertical inversion
+-            if (panelContent.touchingBottomEdge)
+-              return 1; // Bottom edge: horizontal inversion
+-          }
+-          return 0;
+-        }
+-
+-        var barTouchInverted = panelContent.touchingBottomBar || panelContent.touchingRightBar;
+-        // Invert if touching either edge that forms this corner (right OR bottom), regardless of bar position
+-        var edgeInverted = panelContent.allowAttach && (panelContent.touchingRightEdge || panelContent.touchingBottomEdge);
+-
+-        if (barTouchInverted || edgeInverted) {
+-          // Determine inversion direction based on which edge is touched
+-          if (panelContent.touchingRightEdge && panelContent.touchingBottomEdge)
+-            return 0; // Both edges: no inversion (normal rounded corner)
+-          if (panelContent.touchingRightEdge)
+-            return 2; // Right edge: vertical inversion
+-          if (panelContent.touchingBottomEdge)
+-            return 1; // Bottom edge: horizontal inversion
+-          return root.barIsVertical ? 2 : 1;
+-        }
+-        return 0;
+-      }
++      // Floating popups always use four fully rounded corners.
++      property int topLeftCornerState: 0
++      property int topRightCornerState: 0
++      property int bottomLeftCornerState: 0
++      property int bottomRightCornerState: 0
+
+       // MouseArea to catch clicks on the panel and prevent them from reaching the background
+       // This prevents closing the panel when clicking inside it
+diff -ruN /tmp/noctalia-orig/Widgets/NContextMenu.qml /tmp/noctalia-new/Widgets/NContextMenu.qml
+--- /tmp/noctalia-orig/Widgets/NContextMenu.qml	2026-06-13 11:31:58.352472189 +0300
++++ /tmp/noctalia-new/Widgets/NContextMenu.qml	2026-06-13 11:34:03.043506460 +0300
+@@ -59,13 +59,13 @@
+   }
+
+   width: 180
+-  padding: Style.marginS
++  padding: 8
+
+   background: Rectangle {
+-    color: Color.mSurfaceVariant
+-    border.color: Color.mOutline
++    color: Qt.rgba(0x1f / 255, 0x23 / 255, 0x35 / 255, 0.80)
++    border.color: Qt.rgba(0x7a / 255, 0xa2 / 255, 0xf7 / 255, 0.20)
+     border.width: Style.borderS
+-    radius: Style.iRadiusM
++    radius: 22
+   }
+
+   contentItem: NListView {
+@@ -89,8 +89,8 @@
+       property var popup: root
+
+       background: Rectangle {
+-        color: menuItem.hovered && menuItem.enabled ? Color.mHover : "transparent"
+-        radius: Style.iRadiusS
++        color: menuItem.hovered && menuItem.enabled ? Qt.rgba(0x3b / 255, 0x42 / 255, 0x61 / 255, 0.80) : "transparent"
++        radius: 16
+
+         Behavior on color {
+           ColorAnimation {
+@@ -107,7 +107,7 @@
+           visible: modelData.icon !== undefined
+           icon: modelData.icon || ""
+           pointSize: Style.fontSizeM
+-          color: menuItem.hovered && menuItem.enabled ? Color.mOnHover : Color.mOnSurface
++          color: "#f8f8f2"
+           Layout.leftMargin: root.itemPadding
+
+           Behavior on color {
+@@ -120,7 +120,7 @@
+         NText {
+           text: modelData.label || modelData.text || ""
+           pointSize: Style.fontSizeM
+-          color: menuItem.hovered && menuItem.enabled ? Color.mOnHover : Color.mOnSurface
++          color: "#f8f8f2"
+           verticalAlignment: Text.AlignVCenter
+           Layout.fillWidth: true
+           Layout.leftMargin: modelData.icon === undefined ? root.itemPadding : 0
+diff -ruN /tmp/noctalia-orig/Widgets/NPopupContextMenu.qml /tmp/noctalia-new/Widgets/NPopupContextMenu.qml
+--- /tmp/noctalia-orig/Widgets/NPopupContextMenu.qml	2026-06-13 11:31:58.353278103 +0300
++++ /tmp/noctalia-new/Widgets/NPopupContextMenu.qml	2026-06-13 11:33:51.559519545 +0300
+@@ -29,6 +29,7 @@
+
+   readonly property string barPosition: Settings.getBarPositionForScreen(screen?.name)
+   readonly property real barHeight: Style.getBarHeightForScreen(screen?.name)
++  readonly property real popupGap: 10
+
+   signal triggered(string action, var item)
+
+@@ -155,11 +156,11 @@
+       let baseY;
+       if (root.barPosition === "bottom") {
+         // For bottom bar: position menu above the bar
+-        baseY = -(implicitHeight + Style.marginS);
++        baseY = -(implicitHeight + popupGap);
+       } else if (root.barPosition === "top") {
+         // For top bar: position menu below bar at consistent height
+         // Compensate for anchor's Y position to ensure menu top is always at (barHeight + margin)
+-        baseY = barHeight + Style.marginS - anchorGlobalPos.y;
++        baseY = barHeight + popupGap - anchorGlobalPos.y;
+       } else {
+         // For left/right bar: vertically center on target item
+         const targetCenterY = effectiveOffsetY + (effectiveHeight / 2);
+@@ -171,7 +172,7 @@
+
+       // Define clipping boundaries based on bar position
+       const topLimit = Style.marginM;
+-      const bottomLimit = root.barPosition === "bottom" ? screen.height - barHeight - Style.marginS : screen.height - Style.marginM;
++      const bottomLimit = root.barPosition === "bottom" ? screen.height - barHeight - popupGap : screen.height - Style.marginM;
+
+       // Adjust if menu would clip at top (skip for bottom bar - don't push menu down over bar)
+       if (menuScreenY < topLimit && root.barPosition !== "bottom") {
+@@ -190,7 +191,7 @@
+
+     // Fallback if no screen
+     if (root.barPosition === "bottom") {
+-      return -implicitHeight - Style.marginS;
++      return -implicitHeight - popupGap;
+     }
+     return barHeight;
+   }
+@@ -208,10 +209,10 @@
+   Rectangle {
+     id: menuBackground
+     anchors.fill: parent
+-    color: Color.mSurface
+-    border.color: Color.mOutline
++    color: Qt.rgba(0x1f / 255, 0x23 / 255, 0x35 / 255, 0.80)
++    border.color: Qt.rgba(0x7a / 255, 0xa2 / 255, 0xf7 / 255, 0.20)
+     border.width: Style.borderS
+-    radius: Style.radiusM
++    radius: 22
+     opacity: root.visible ? 1.0 : 0.0
+
+     Behavior on opacity {
+@@ -258,8 +259,8 @@
+           Rectangle {
+             id: innerRect
+             anchors.fill: parent
+-            color: mouseArea.containsMouse ? Color.mHover : "transparent"
+-            radius: Style.radiusS
++            color: mouseArea.containsMouse ? Qt.rgba(0x3b / 255, 0x42 / 255, 0x61 / 255, 0.80) : "transparent"
++            radius: 16
+             opacity: modelData.enabled !== false ? 1.0 : 0.5
+
+             Behavior on color {
+@@ -279,7 +280,7 @@
+                 icon: modelData.icon || ""
+                 pointSize: Style.fontSizeS
+                 applyUiScale: false
+-                color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
++                color: "#f8f8f2"
+                 verticalAlignment: Text.AlignVCenter
+
+                 Behavior on color {
+@@ -292,7 +293,7 @@
+               NText {
+                 text: modelData.label || modelData.text || ""
+                 pointSize: Style.fontSizeS
+-                color: mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface
++                color: "#f8f8f2"
+                 verticalAlignment: Text.AlignVCenter
+                 Layout.fillWidth: true
+
+diff -ruN /tmp/noctalia-orig/Modules/Panels/Launcher/Launcher.qml /tmp/noctalia-new/Modules/Panels/Launcher/Launcher.qml
+--- /tmp/noctalia-orig/Modules/Panels/Launcher/Launcher.qml	2026-06-13 11:31:58.337635508 +0300
++++ /tmp/noctalia-new/Modules/Panels/Launcher/Launcher.qml	2026-06-13 12:48:00.000000000 +0300
+@@ -43,13 +43,13 @@
+   readonly property int previewPanelWidth: Math.round(400 * Style.uiScaleRatio)
+
+   // Panel sizing
+-  readonly property int listPanelWidth: Math.round(500 * Style.uiScaleRatio)
++  readonly property int listPanelWidth: Math.round(420 * Style.uiScaleRatio)
+   readonly property int totalBaseWidth: listPanelWidth + Style.margin2L
+
+   preferredWidth: totalBaseWidth
+-  preferredHeight: Math.round(600 * Style.uiScaleRatio)
+-  preferredWidthRatio: 0.25
+-  preferredHeightRatio: 0.5
++  preferredHeight: Math.round(420 * Style.uiScaleRatio)
++  preferredWidthRatio: 0.22
++  preferredHeightRatio: 0.38
+
+   // Positioning
+   readonly property string screenBarPosition: Settings.getBarPositionForScreen(screen?.name)
+diff -ruN /tmp/noctalia-orig/Modules/Panels/Launcher/LauncherCore.qml /tmp/noctalia-new/Modules/Panels/Launcher/LauncherCore.qml
+--- /tmp/noctalia-orig/Modules/Panels/Launcher/LauncherCore.qml	2026-06-13 11:31:58.336850629 +0300
++++ /tmp/noctalia-new/Modules/Panels/Launcher/LauncherCore.qml	2026-06-13 12:48:00.000000000 +0300
+@@ -126,7 +126,7 @@
+
+     return base;
+   }
+-  readonly property int listPanelWidth: Math.round(500 * Style.uiScaleRatio)
++  readonly property int listPanelWidth: Math.round(420 * Style.uiScaleRatio)
+   readonly property int gridContentWidth: listPanelWidth - Style.margin2XS
+   readonly property int gridCellSize: Math.floor((gridContentWidth - ((targetGridColumns - 1) * Style.marginS)) / targetGridColumns)
+
+@@ -581,24 +581,30 @@
+
+   SettingsProvider {
+     id: settingsProvider
+     Component.onCompleted: {
+-      registerProvider(this);
+-      Logger.d("Launcher", "Registered: SettingsProvider");
++      if (Settings.data.appLauncher.enableSettingsSearch) {
++        registerProvider(this);
++        Logger.d("Launcher", "Registered: SettingsProvider");
++      }
+     }
+   }
+
+   SessionProvider {
+     id: sessionProvider
+     Component.onCompleted: {
+-      registerProvider(this);
+-      Logger.d("Launcher", "Registered: SessionProvider");
++      if (Settings.data.appLauncher.enableSessionSearch) {
++        registerProvider(this);
++        Logger.d("Launcher", "Registered: SessionProvider");
++      }
+     }
+   }
+
+   WindowsProvider {
+     id: windowsProvider
+     Component.onCompleted: {
+-      registerProvider(this);
+-      Logger.d("Launcher", "Registered: WindowsProvider");
++      if (Settings.data.appLauncher.enableWindowsSearch) {
++        registerProvider(this);
++        Logger.d("Launcher", "Registered: WindowsProvider");
++      }
+     }
+   }
+diff -ruN /tmp/noctalia-orig/Widgets/NTextInput.qml /tmp/noctalia-new/Widgets/NTextInput.qml
+--- /tmp/noctalia-orig/Widgets/NTextInput.qml	2026-06-13 11:31:58.354063012 +0300
++++ /tmp/noctalia-new/Widgets/NTextInput.qml	2026-06-13 12:48:00.000000000 +0300
+@@ -68,8 +68,8 @@
+
+       radius: root.radius
+       color: Color.mSurface
+-      border.color: input.activeFocus ? Color.mSecondary : Color.mOutline
+-      border.width: Style.borderS
++      border.color: input.activeFocus ? Qt.rgba(0x7a / 255, 0xa2 / 255, 0xf7 / 255, 0.24) : Qt.rgba(0x7a / 255, 0xa2 / 255, 0xf7 / 255, 0.14)
++      border.width: input.activeFocus ? 0 : Style.borderS
+
+      Behavior on border.color {
+        ColorAnimation {
+
+diff -ruN /tmp/noctalia-orig/Services/Power/IdleService.qml /tmp/noctalia-new/Services/Power/IdleService.qml
+--- /tmp/noctalia-orig/Services/Power/IdleService.qml	2026-06-13 11:31:58.346000000 +0300
++++ /tmp/noctalia-new/Services/Power/IdleService.qml	2026-06-13 15:58:00.000000000 +0300
+@@ -194,8 +194,10 @@
+       CompositorService.turnOffMonitors();
+       root._screenOffActive = true;
+       root.screenOffRequested();
+     } else if (stage === "lock") {
+-      if (Settings.data.idle.lockCommand)
++      if (Settings.data.idle.lockCommand) {
+         Quickshell.execDetached(["sh", "-c", Settings.data.idle.lockCommand]);
++        return;
++      }
+       if (PanelService.lockScreen && !PanelService.lockScreen.active) {
+         PanelService.lockScreen.active = true;
+       }

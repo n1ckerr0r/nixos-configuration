@@ -1,9 +1,5 @@
 { pkgs, ... }:
 
-let
-  interfaceSettings = builtins.fromJSON (builtins.readFile ../dotfiles/gtk/dconf-interface.json);
-in
-
 {
   gtk = {
     enable = true;
@@ -31,5 +27,9 @@ in
 
   dconf.enable = true;
 
-  dconf.settings."org/gnome/desktop/interface" = interfaceSettings;
+  dconf.settings."org/gnome/desktop/interface" = {
+    color-scheme = "prefer-dark";
+    gtk-theme = "adw-gtk3-dark";
+    icon-theme = "Papirus-Dark";
+  };
 }

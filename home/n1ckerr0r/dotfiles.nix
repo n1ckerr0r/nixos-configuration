@@ -1,8 +1,10 @@
 { config, ... }:
 
 let
-  dotfilesRoot = "${config.home.homeDirectory}/nixos-config/home/n1ckerr0r/dotfiles";
+  configRoot = "${config.home.homeDirectory}/nixos-config";
+  dotfilesRoot = "${configRoot}/home/n1ckerr0r/dotfiles";
   link = path: config.lib.file.mkOutOfStoreSymlink "${dotfilesRoot}/${path}";
+  asset = path: config.lib.file.mkOutOfStoreSymlink "${configRoot}/assets/${path}";
 in
 {
   # This is the complete map from standard home paths to editable sources.
@@ -89,23 +91,23 @@ in
     };
     "Pictures/wallpapers/lisau_1.png" = {
       force = true;
-      source = link "wallpapers/lisau_1.png";
+      source = asset "wallpapers/lisau_1.png";
     };
     "Pictures/wallpapers/lisau_3.png" = {
       force = true;
-      source = link "wallpapers/lisau_3.png";
+      source = asset "wallpapers/lisau_3.png";
     };
     ".local/share/backgrounds/lisau.png" = {
       force = true;
-      source = link "wallpapers/lisau.png";
+      source = asset "wallpapers/lisau.png";
     };
     ".local/share/backgrounds/lisau_1.png" = {
       force = true;
-      source = link "wallpapers/lisau_1.png";
+      source = asset "wallpapers/lisau_1.png";
     };
     ".local/share/backgrounds/lisau_3.png" = {
       force = true;
-      source = link "wallpapers/lisau_3.png";
+      source = asset "wallpapers/lisau_3.png";
     };
   };
 }

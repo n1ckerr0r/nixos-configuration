@@ -17,8 +17,7 @@ This directory contains the Home Manager profile for `n1ckerr0r`.
 
 ## Dotfiles
 
-- `dotfiles/gtk/dconf-interface.json` stores GNOME interface values consumed by Home Manager.
 - `dotfiles/kitty/kitty.conf` configures the Kitty terminal.
 - `dotfiles/niri/config.kdl` configures the Niri compositor.
-- `dotfiles/wallpapers/` stores wallpapers managed by Home Manager.
 - `dotfiles/zsh/.zshrc` configures the interactive zsh shell.
+- `../../assets/wallpapers/` stores wallpapers shared by NixOS and Home Manager.
