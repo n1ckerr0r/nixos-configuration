@@ -1,0 +1,3 @@
+[submodule "home/n1ckerr0r/dotfiles"]
+	path = home/n1ckerr0r/dotfiles
+	url = git@github.com:n1ckerr0r/dotfiles.git

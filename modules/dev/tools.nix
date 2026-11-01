@@ -1,0 +1,39 @@
+{ pkgs, ... }:
+
+{
+  environment.systemPackages = with pkgs; [
+    fastfetch
+    ripgrep
+    fd
+    bat
+    jq
+    yq-go
+    miller
+    eza
+    fzf
+    delta
+    sd
+    ast-grep
+    tree
+    keyd
+    docker
+    docker-compose
+    kubectl
+    kubernetes-helm
+    postgresql
+    mariadb
+    redis
+    mongosh
+    mongodb-tools
+    apacheKafka
+    kcat
+    lsof
+    nettools
+    traceroute
+    tcptraceroute
+    at
+    cpulimit
+    killall
+    wget
+  ];
+}
