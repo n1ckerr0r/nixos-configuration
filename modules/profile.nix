@@ -10,6 +10,6 @@
     mongodb.enable = false;
 
     # Enable system Redis for projects.
-    redis.enable = true;
+    redis.enable = false;
   };
 }
