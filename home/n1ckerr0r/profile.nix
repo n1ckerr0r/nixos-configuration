@@ -1,6 +1,37 @@
 { inputs, pkgs, ... }:
 
 let
+  codexPackage = pkgs.stdenvNoCC.mkDerivation {
+    pname = "codex";
+    version = "0.166.0";
+
+    src = pkgs.fetchurl {
+      url = "https://registry.npmjs.org/@openai/codex/-/codex-0.166.0-linux-x64.tgz";
+      hash = "sha512-CxDm3+D1cpbGJeHrdzINoG+3wn9BVncP4qpZaaNYkxe8iPtRJOYyCJnnPoVjWRIBvI9vPKbRoifsMSA5xDaUpw==";
+    };
+
+    sourceRoot = "package";
+    dontStrip = true;
+
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p "$out/bin" "$out/libexec/codex"
+      cp -R vendor/x86_64-unknown-linux-musl/. "$out/libexec/codex/"
+      ln -s "$out/libexec/codex/bin/codex" "$out/bin/codex"
+
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "Lightweight coding agent that runs in your terminal";
+      homepage = "https://github.com/openai/codex";
+      license = pkgs.lib.licenses.asl20;
+      mainProgram = "codex";
+      platforms = [ "x86_64-linux" ];
+    };
+  };
+
   discordPackage =
     (import inputs.discord-nixpkgs {
       system = pkgs.stdenv.hostPlatform.system;
@@ -30,7 +61,7 @@ in
   programs.home-manager.enable = true;
 
   home.packages = with pkgs; [
-    codex
+    codexPackage
     translate-shell
     chromium
     discordPackage
