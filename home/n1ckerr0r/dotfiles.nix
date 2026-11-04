@@ -54,6 +54,10 @@ in
       force = true;
       source = link "noctalia/settings.json";
     };
+    "noctalia/notification-rules.json" = {
+      force = true;
+      source = link "noctalia/notification-rules.json";
+    };
     "noctalia/wallpapers.json" = {
       force = true;
       source = link "noctalia/wallpapers.json";
